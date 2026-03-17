@@ -55,9 +55,10 @@ jobs:
       - name: Run containers
         env:
           REPO_USER: ${{ secrets.REPO_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           docker rm -f festival-app || true
-          docker compose up -d
+          docker compose -f docker-compose.prod.yml up -d
 
       - name: Cleanup
         run: |
@@ -71,6 +72,6 @@ jobs:
             echo "festival-app is UP"
           else
             echo "Health check failed"
-            docker compose logs --tail 200
+            docker compose -f docker-compose.prod.yml logs --tail 200
             exit 1
           fi
