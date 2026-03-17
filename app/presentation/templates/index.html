@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="filter-form">
+    <h2>공연 필터</h2>
+    <form method="GET" action="/">
+        <div class="form-grid">
+            <div class="form-row">
+                <label>공연명</label>
+                <input type="text" name="keyword" value="{{ filters.keyword }}" placeholder="검색어 입력">
+            </div>
+            <div class="form-row">
+                <label>지역</label>
+                <select name="area">
+                    <option value="">전체</option>
+                    {% for a in areas %}
+                    <option value="{{ a }}" {% if filters.area == a %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <label>시작일</label>
+                <input type="date" name="start_date" value="{{ filters.start_date }}">
+            </div>
+            <div class="form-row">
+                <label>종료일</label>
+                <input type="date" name="end_date" value="{{ filters.end_date }}">
+            </div>
+            <div class="form-row checkbox-row">
+                <label>
+                    <input type="checkbox" name="festival_only" {% if filters.festival_only %}checked{% endif %}>
+                    축제만 보기
+                </label>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit">검색</button>
+            <a href="/" class="btn-reset">초기화</a>
+        </div>
+    </form>
+</section>
+
+<section class="festival-list">
+    <h2>공연 목록 ({{ festivals|length }}건)</h2>
+    {% if festivals %}
+    <div class="grid">
+        {% for f in festivals %}
+        <a href="/festivals/{{ f.kopis_id }}" class="card">
+            {% if f.local_poster_path %}
+            <img src="/static/posters/{{ f.local_poster_path }}" alt="{{ f.name }}">
+            {% else %}
+            <div class="no-poster">No Image</div>
+            {% endif %}
+            <div class="card-body">
+                <h3>{{ f.name }}</h3>
+                <p class="meta">{{ f.period.start_date }} ~ {{ f.period.end_date }}</p>
+                <p class="meta">{{ f.venue }}</p>
+                <span class="badge">{{ f.genre }}</span>
+                <span class="badge">{{ f.area }}</span>
+                {% if f.is_festival %}
+                <span class="badge festival-badge">축제</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">검색 결과가 없습니다.</p>
+    {% endif %}
+</section>
+{% endblock %}

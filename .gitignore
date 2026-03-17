@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+static/posters/*.jpg
+static/posters/*.jpeg
+static/posters/*.png
+static/posters/*.gif
+.venv/
+.claude/
+네이버 페스티벌 블로그 수집.txt
+*.pdf
+seoul_jazz_festival_poster.jpg

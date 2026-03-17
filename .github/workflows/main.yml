@@ -1,0 +1,76 @@
+name: Deploy festival-app via Docker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.REPO_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/${{ secrets.REPO_USER }}/festival-app:latest
+          platforms: linux/arm64
+
+  deploy:
+    needs: build-and-push
+    runs-on: [self-hosted, festival-app]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create .env file
+        run: echo "${{ secrets.APP_ENV }}" > .env
+
+      - name: GHCR Login
+        run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.REPO_USER }} --password-stdin
+
+      - name: Pull latest image
+        run: docker pull ghcr.io/${{ secrets.REPO_USER }}/festival-app:latest
+
+      - name: Run containers
+        env:
+          REPO_USER: ${{ secrets.REPO_USER }}
+        run: |
+          docker rm -f festival-app || true
+          docker compose up -d
+
+      - name: Cleanup
+        run: |
+          docker image prune -f
+          docker logout
+
+      - name: Health check
+        run: |
+          sleep 15
+          if curl -sSf http://localhost/ > /dev/null; then
+            echo "festival-app is UP"
+          else
+            echo "Health check failed"
+            docker compose logs --tail 200
+            exit 1
+          fi

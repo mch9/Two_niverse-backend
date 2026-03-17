@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/" class="back-link">목록으로</a>
+
+<section class="detail">
+    <div class="detail-header">
+        <div class="poster">
+            {% if festival.local_poster_path %}
+            <img src="/static/posters/{{ festival.local_poster_path }}" alt="{{ festival.name }}">
+            {% else %}
+            <div class="no-poster large">No Image</div>
+            {% endif %}
+        </div>
+        <div class="info">
+            <h1>{{ festival.name }}</h1>
+            <table>
+                <tr><th>일정</th><td>{{ festival.period.start_date }} ~ {{ festival.period.end_date }} ({{ festival.period.duration_days }}일)</td></tr>
+                <tr><th>장소</th><td>{{ festival.venue }}</td></tr>
+                <tr><th>지역</th><td>{{ festival.area }}</td></tr>
+                <tr><th>장르</th><td>{{ festival.genre }}</td></tr>
+                {% if festival.age_limit %}
+                <tr><th>관람연령</th><td>{{ festival.age_limit }}</td></tr>
+                {% endif %}
+                {% if festival.price_info %}
+                <tr><th>티켓가격</th><td>{{ festival.price_info }}</td></tr>
+                {% endif %}
+                {% if festival.schedule %}
+                <tr><th>공연시간</th><td>{{ festival.schedule }}</td></tr>
+                {% endif %}
+                {% if festival.cast_info %}
+                <tr><th>출연진</th><td>{{ festival.cast_info }}</td></tr>
+                {% endif %}
+                {% if festival.producer %}
+                <tr><th>주최</th><td>{{ festival.producer }}</td></tr>
+                {% endif %}
+            </table>
+
+            {% if festival.ticket_links %}
+            <div class="ticket-links">
+                <h3>예매하기</h3>
+                {% for tl in festival.ticket_links %}
+                <a href="{{ tl.url }}" target="_blank" class="ticket-btn">{{ tl.vendor_name }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="blog-section">
+    <h2>관련 블로그</h2>
+    {% if blogs %}
+    <div class="blog-list">
+        {% for blog in blogs %}
+        <div class="blog-card">
+            <a href="{{ blog.link }}" target="_blank">{{ blog.title }}</a>
+            <span class="blog-meta">{{ blog.blogger_name }} | {{ blog.post_date }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">관련 블로그 글이 없습니다.</p>
+    {% endif %}
+</section>
+{% endblock %}
