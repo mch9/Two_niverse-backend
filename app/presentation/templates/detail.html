@@ -5,8 +5,8 @@
 <section class="detail">
     <div class="detail-header">
         <div class="poster">
-            {% if festival.local_poster_path %}
-            <img src="/static/posters/{{ festival.local_poster_path }}" alt="{{ festival.name }}">
+            {% if festival.poster_url %}
+            <img src="{{ festival.poster_url }}" alt="{{ festival.name }}">
             {% else %}
             <div class="no-poster large">No Image</div>
             {% endif %}

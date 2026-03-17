@@ -45,8 +45,8 @@
     <div class="grid">
         {% for f in festivals %}
         <a href="/festivals/{{ f.kopis_id }}" class="card">
-            {% if f.local_poster_path %}
-            <img src="/static/posters/{{ f.local_poster_path }}" alt="{{ f.name }}">
+            {% if f.poster_url %}
+            <img src="{{ f.poster_url }}" alt="{{ f.name }}" loading="lazy">
             {% else %}
             <div class="no-poster">No Image</div>
             {% endif %}

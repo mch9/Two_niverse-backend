@@ -75,6 +75,11 @@ def create_app():
     )
     app.secret_key = os.getenv("SECRET_KEY", "dev-only-change-in-prod")
 
+    # 캐싱 설정
+    from flask_caching import Cache
+    cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
+    app.config["CACHE"] = cache
+
     # DB 초기화
     Database.init(Config.SQLALCHEMY_DATABASE_URI)
 

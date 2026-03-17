@@ -4,8 +4,18 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 bp = Blueprint("main", __name__)
 
 
+def _make_cache_key():
+    return request.full_path
+
+
 @bp.route("/")
 def index():
+    cache = current_app.config["CACHE"]
+    cache_key = f"index:{request.full_path}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
     festival_service = current_app.config["FESTIVAL_SERVICE"]
 
     # 필터 파라미터 수집
@@ -38,7 +48,7 @@ def index():
 
     areas = festival_service.get_all_areas()
 
-    return render_template(
+    result = render_template(
         "index.html",
         festivals=festivals,
         areas=areas,
@@ -50,6 +60,8 @@ def index():
             "festival_only": festival_only,
         },
     )
+    cache.set(cache_key, result, timeout=300)
+    return result
 
 
 @bp.route("/festivals/<kopis_id>")
