@@ -1,4 +1,6 @@
 import os
+import threading
+from datetime import datetime, date
 from flask import Flask
 from app.config import Config
 from app.infrastructure.persistence.database import Database
@@ -8,6 +10,51 @@ from app.infrastructure.external_api.kopis_client import KopisClient
 from app.infrastructure.external_api.naver_blog_client import NaverBlogClient
 from app.application.festival_service import FestivalApplicationService
 from app.application.blog_service import BlogApplicationService
+
+
+def _collect_festivals(kopis_client, poster_dir):
+    """DB가 비어있으면 초기 데이터 수집"""
+    session = Database.get_session()
+    try:
+        repo = SqlAlchemyFestivalRepository(session)
+        if repo.count() > 0:
+            return
+
+        service = FestivalApplicationService(
+            festival_repo=repo,
+            kopis_client=kopis_client,
+            poster_dir=poster_dir,
+        )
+
+        today = date.today()
+        stdate = today.strftime("%Y%m01")
+        eddate = today.strftime("%Y%m%d")
+
+        service.collect_festivals("축제", stdate, eddate)
+        service.collect_festivals("페스티벌", stdate, eddate)
+    finally:
+        session.close()
+
+
+def _scheduled_collect(kopis_client, poster_dir):
+    """매일 실행되는 정기 수집"""
+    session = Database.get_session()
+    try:
+        repo = SqlAlchemyFestivalRepository(session)
+        service = FestivalApplicationService(
+            festival_repo=repo,
+            kopis_client=kopis_client,
+            poster_dir=poster_dir,
+        )
+
+        today = date.today()
+        stdate = today.strftime("%Y%m01")
+        eddate = today.strftime("%Y%m%d")
+
+        service.collect_festivals("축제", stdate, eddate)
+        service.collect_festivals("페스티벌", stdate, eddate)
+    finally:
+        session.close()
 
 
 def create_app():
@@ -27,6 +74,24 @@ def create_app():
         client_id=Config.NAVER_CLIENT_ID,
         client_secret=Config.NAVER_CLIENT_SECRET,
     )
+
+    # 앱 시작 시 초기 데이터 수집 (백그라운드)
+    threading.Thread(
+        target=_collect_festivals,
+        args=(kopis_client, Config.POSTER_DIR),
+        daemon=True,
+    ).start()
+
+    # 매일 새벽 3시 자동 수집 스케줄러
+    from apscheduler.schedulers.background import BackgroundScheduler
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        _scheduled_collect,
+        "cron",
+        hour=3,
+        args=[kopis_client, Config.POSTER_DIR],
+    )
+    scheduler.start()
 
     # 요청마다 세션을 생성하는 서비스 팩토리
     @app.before_request

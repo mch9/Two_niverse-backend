@@ -101,6 +101,9 @@ class SqlAlchemyFestivalRepository(FestivalRepository):
         models = query.order_by(FestivalModel.start_date).all()
         return [self._to_entity(m) for m in models]
 
+    def count(self) -> int:
+        return self.session.query(FestivalModel).count()
+
     def get_all_areas(self) -> list[str]:
         results = self.session.query(distinct(FestivalModel.area)).order_by(
             FestivalModel.area
