@@ -16,25 +16,40 @@ class KopisClient:
         self.api_key = api_key
 
     def search_festivals(self, keyword: str | None, stdate: str, eddate: str) -> list[dict]:
-        """KOPIS에서 페스티벌 목록 검색. 반환: [{'kopis_id': ..., 'name': ...}, ...]"""
-        url = (
-            f"{self.BASE_URL}?service={self.api_key}"
-            f"&stdate={stdate}&eddate={eddate}"
-            f"&cpage=1&rows=500&shcate=CCCD"
-        )
-        if keyword:
-            encoded = urllib.parse.quote(keyword)
-            url += f"&shprfnm={encoded}"
-        resp = requests.get(url, timeout=15)
-        resp.raise_for_status()
-
-        root = ET.fromstring(resp.text)
+        """KOPIS에서 페스티벌 목록 검색 (페이지네이션). 반환: [{'kopis_id': ..., 'name': ...}, ...]"""
         results = []
-        for db in root.findall("db"):
-            kopis_id = self._text(db, "mt20id")
-            name = self._text(db, "prfnm")
-            if kopis_id and name:
-                results.append({"kopis_id": kopis_id, "name": name})
+        page = 1
+
+        while True:
+            url = (
+                f"{self.BASE_URL}?service={self.api_key}"
+                f"&stdate={stdate}&eddate={eddate}"
+                f"&cpage={page}&rows=100&shcate=CCCD"
+            )
+            if keyword:
+                encoded = urllib.parse.quote(keyword)
+                url += f"&shprfnm={encoded}"
+
+            resp = requests.get(url, timeout=15)
+            resp.raise_for_status()
+
+            root = ET.fromstring(resp.text)
+            items = root.findall("db")
+
+            if not items:
+                break
+
+            for db in items:
+                kopis_id = self._text(db, "mt20id")
+                name = self._text(db, "prfnm")
+                if kopis_id and name:
+                    results.append({"kopis_id": kopis_id, "name": name})
+
+            if len(items) < 100:
+                break
+
+            page += 1
+
         return results
 
     def get_festival_detail(self, kopis_id: str) -> Festival:
