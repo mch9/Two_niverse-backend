@@ -28,10 +28,9 @@ def _collect_festivals(kopis_client, poster_dir):
 
         today = date.today()
         stdate = today.strftime("%Y%m01")
-        eddate = today.strftime("%Y%m%d")
+        eddate = today.strftime("%Y%m") + "31"
 
-        service.collect_festivals("축제", stdate, eddate)
-        service.collect_festivals("페스티벌", stdate, eddate)
+        service.collect_festivals(None, stdate, eddate)
     finally:
         session.close()
 
@@ -49,10 +48,9 @@ def _scheduled_collect(kopis_client, poster_dir):
 
         today = date.today()
         stdate = today.strftime("%Y%m01")
-        eddate = today.strftime("%Y%m%d")
+        eddate = today.strftime("%Y%m") + "31"
 
-        service.collect_festivals("축제", stdate, eddate)
-        service.collect_festivals("페스티벌", stdate, eddate)
+        service.collect_festivals(None, stdate, eddate)
     finally:
         session.close()
 

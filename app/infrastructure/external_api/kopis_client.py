@@ -15,15 +15,16 @@ class KopisClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    def search_festivals(self, keyword: str, stdate: str, eddate: str) -> list[dict]:
+    def search_festivals(self, keyword: str | None, stdate: str, eddate: str) -> list[dict]:
         """KOPIS에서 페스티벌 목록 검색. 반환: [{'kopis_id': ..., 'name': ...}, ...]"""
-        encoded = urllib.parse.quote(keyword)
         url = (
             f"{self.BASE_URL}?service={self.api_key}"
             f"&stdate={stdate}&eddate={eddate}"
-            f"&cpage=1&rows=100&shprfnm={encoded}"
-            f"&shcate=CCCD"
+            f"&cpage=1&rows=500&shcate=CCCD"
         )
+        if keyword:
+            encoded = urllib.parse.quote(keyword)
+            url += f"&shprfnm={encoded}"
         resp = requests.get(url, timeout=15)
         resp.raise_for_status()
 
