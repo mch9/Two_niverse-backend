@@ -13,7 +13,8 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   app:
     image: ghcr.io/${REPO_USER}/festival-app:latest
@@ -24,6 +25,7 @@ services:
       - "80:5000"
     volumes:
       - poster_data:/app/static/posters
+    restart: on-failure
     depends_on:
       mysql:
         condition: service_healthy
