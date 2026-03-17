@@ -1,7 +1,11 @@
 import os
+import logging
 import threading
 from datetime import datetime, date
 from flask import Flask
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 from app.config import Config
 from app.infrastructure.persistence.database import Database
 from app.infrastructure.persistence.festival_repository_impl import SqlAlchemyFestivalRepository
@@ -14,10 +18,14 @@ from app.application.blog_service import BlogApplicationService
 
 def _collect_festivals(kopis_client, poster_dir):
     """DB가 비어있으면 초기 데이터 수집"""
+    logger.info("[수집] 초기 데이터 수집 시작")
     session = Database.get_session()
     try:
         repo = SqlAlchemyFestivalRepository(session)
-        if repo.count() > 0:
+        count = repo.count()
+        logger.info(f"[수집] 현재 DB 건수: {count}")
+        if count > 0:
+            logger.info("[수집] 데이터가 이미 있어 수집 건너뜀")
             return
 
         service = FestivalApplicationService(
@@ -30,7 +38,11 @@ def _collect_festivals(kopis_client, poster_dir):
         stdate = today.strftime("%Y%m01")
         eddate = today.strftime("%Y%m") + "31"
 
-        service.collect_festivals(None, stdate, eddate)
+        logger.info(f"[수집] KOPIS API 호출: {stdate} ~ {eddate}")
+        collected = service.collect_festivals(None, stdate, eddate)
+        logger.info(f"[수집] 완료: {collected}건 수집됨")
+    except Exception as e:
+        logger.error(f"[수집] 에러 발생: {e}", exc_info=True)
     finally:
         session.close()
 
